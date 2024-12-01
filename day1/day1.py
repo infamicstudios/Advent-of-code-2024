@@ -37,6 +37,21 @@ def compute_similarity_score(a_tensor: torch.Tensor, b_tensor: torch.Tensor) -> 
         
         return float(score.item())
 
+@torch.jit.script
+def compute_similarity_score_sparse(a_tensor: torch.Tensor, b_tensor: torch.Tensor) -> float:
+    with torch.no_grad():
+        a_unique, a_counts = torch.unique(a_tensor, return_counts=True)
+        b_unique, b_counts = torch.unique(b_tensor, return_counts=True)
+        
+        score = torch.tensor(0., device=a_tensor.device)
+        for val, count_a in zip(a_unique, a_counts):
+            mask = (b_unique == val)
+            if mask.any():
+                count_b = b_counts[mask].item()
+                score += val.item() * count_a.item() * count_b
+                
+        return float(score)
+
 def main() -> int:
     device: torch.device = torch.device('mps' if torch.backends.mps.is_available() else 
                                       'cuda' if torch.cuda.is_available() else 
@@ -56,7 +71,7 @@ def main() -> int:
         total_difference: torch.Tensor = sum_of_differences(a_tensor, b_tensor)
         print("Sum of differences:", total_difference.item())
 
-        similarity_score: float = compute_similarity_score(a_tensor, b_tensor)
+        similarity_score: float = compute_similarity_score_sparse(a_tensor, b_tensor)
         print("Similarity score:", similarity_score)
         
     except Exception as e:
