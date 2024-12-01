@@ -38,23 +38,25 @@ def compute_similarity_score(a_tensor: torch.Tensor, b_tensor: torch.Tensor) -> 
         return float(score.item())
 
 def main() -> int:
-    device = torch.device('mps' if torch.backends.mps.is_available() else 
-                         'cuda' if torch.cuda.is_available() else 
-                         'cpu')
+    device: torch.device = torch.device('mps' if torch.backends.mps.is_available() else 
+                                      'cuda' if torch.cuda.is_available() else 
+                                      'cpu')
     print(f"Running on device: {device}")
 
-    filename = 'prob1_input.txt'
+    filename: str = 'prob1_input.txt'
     try:
         # warm up GPU
         if device.type in ['cuda', 'mps']:
             torch.cuda.empty_cache()
             
+        a_tensor: torch.Tensor
+        b_tensor: torch.Tensor
         a_tensor, b_tensor = load_data(filename, device)        
 
-        total_difference = sum_of_differences(a_tensor, b_tensor)
+        total_difference: torch.Tensor = sum_of_differences(a_tensor, b_tensor)
         print("Sum of differences:", total_difference.item())
 
-        similarity_score = compute_similarity_score(a_tensor, b_tensor)
+        similarity_score: float = compute_similarity_score(a_tensor, b_tensor)
         print("Similarity score:", similarity_score)
         
     except Exception as e:
